@@ -361,64 +361,156 @@ def create_ui() -> gr.Blocks:
             font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"]
         ),
         css="""
+        * {
+            box-sizing: border-box;
+        }
         .gradio-container {
-            max-width: 900px !important;
-            margin: auto !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif !important;
-            padding: 1rem;
+            background: #ffffff !important;
+        }
+        .block {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
         .main-header {
-            background: #f8fafc;
-            color: #1e293b;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
+            background: #1e293b;
+            color: white;
+            padding: 2rem;
+            margin: 0;
             text-align: center;
-            border: 1px solid #e2e8f0;
+            border-bottom: 1px solid #334155;
         }
-        .command-input {
+        .main-header h1 {
+            font-size: 1.875rem !important;
+            font-weight: 400 !important;
+            margin: 0 0 0.5rem 0 !important;
+        }
+        .main-header p {
+            margin: 0 !important;
+            opacity: 0.8;
             font-size: 1rem !important;
-            border-radius: 6px !important;
-            border: 1px solid #d1d5db !important;
-            transition: all 0.2s ease !important;
         }
-        .command-input:focus {
+        .content-area {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .command-input textarea, .command-input input {
+            width: 100% !important;
+            font-size: 1rem !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            padding: 0.875rem !important;
+            transition: border-color 0.2s ease !important;
+            background: #ffffff !important;
+            font-family: inherit !important;
+        }
+        .command-input textarea:focus, .command-input input:focus {
+            outline: none !important;
             border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
-        .status-bar {
-            padding: 0.75rem 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
-            font-weight: 500;
-            border: 1px solid #e5e7eb;
-            background: #f9fafb;
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        .btn-primary {
+            background: #3b82f6 !important;
+            color: white !important;
+        }
+        .btn-primary:hover {
+            background: #2563eb !important;
+        }
+        .btn-secondary {
+            background: #f3f4f6 !important;
+            color: #374151 !important;
+            border: 1px solid #d1d5db !important;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb !important;
+        }
+        .btn-danger {
+            background: #ef4444 !important;
+            color: white !important;
+        }
+        .btn-danger:hover {
+            background: #dc2626 !important;
         }
         .status-message {
-            font-size: 0.9rem !important;
-            color: #6b7280 !important;
-            text-align: center !important;
-            margin: 0.5rem 0 !important;
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #64748b;
+            margin: 1rem 0;
         }
-        .monospace {
-            font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
+        .code-output {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
             font-size: 0.875rem !important;
             line-height: 1.6 !important;
+            padding: 1.5rem !important;
+        }
+        .code-input {
             background: #f8fafc !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
+            font-size: 0.875rem !important;
+            padding: 1rem !important;
         }
-        button {
-            font-weight: 500 !important;
-            transition: all 0.15s ease !important;
+        .code-input:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
-        button:hover {
-            transform: translateY(-1px) !important;
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 0.875rem;
+            background: #f9fafb;
         }
         """
     ) as app:
         # Header
         gr.HTML("""
         <div class="main-header">
-            <h1 style="margin: 0; font-size: 1.75rem; font-weight: 500;">Desktop Commander</h1>
+            <h1>Desktop Commander</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 1.125rem; font-weight: 400;">AI-powered command line interface</p>
         </div>
         """)
         
@@ -438,79 +530,76 @@ def create_ui() -> gr.Blocks:
                 )
         
         # Main Content Area
-        with gr.Column():
-                # Natural Language Input
+        with gr.Column(elem_classes=["content-area"]):
+            # Input Section
+            with gr.Group(elem_classes=["form-group"]):
                 prompt_input = gr.Textbox(
                     label="Command Request",
-                    placeholder="Describe what you want to do...",
-                    lines=2,
+                    placeholder="Describe what you want to do in natural language...",
+                    lines=3,
                     elem_classes=["command-input"]
                 )
-                
-                # Action Buttons
-                with gr.Row():
-                    generate_btn = gr.Button(
-                        "Generate",
-                        variant="secondary",
-                        size="lg"
-                    )
-                    execute_btn = gr.Button(
-                        "Generate & Execute",
-                        variant="primary",
-                        size="lg"
-                    )
-                    clear_btn = gr.Button(
-                        "Clear",
-                        variant="stop",
-                        size="lg"
-                    )
-                
-                # Status Message
-                status_message = gr.Markdown(
-                    value="Ready",
-                    visible=True,
-                    elem_classes=["status-message"]
+            
+            # Action Buttons
+            with gr.Row(elem_classes=["button-group"]):
+                generate_btn = gr.Button(
+                    "Generate Command",
+                    elem_classes=["btn", "btn-secondary"]
                 )
-                
-                # Generated Command Display
+                execute_btn = gr.Button(
+                    "Generate & Execute",
+                    elem_classes=["btn", "btn-primary"]
+                )
+                clear_btn = gr.Button(
+                    "Clear",
+                    elem_classes=["btn", "btn-danger"]
+                )
+            
+            # Status Message
+            status_message = gr.HTML(
+                value='<div class="status-message">Ready to generate commands</div>',
+                visible=True
+            )
+            
+            # Generated Command Section
+            with gr.Group(elem_classes=["form-group"]):
                 command_display = gr.Textbox(
                     label="Generated Command",
-                    placeholder="Generated command will appear here",
+                    placeholder="Your generated command will appear here",
                     lines=2,
                     visible=False,
                     interactive=True,
-                    elem_classes=["monospace"]
+                    elem_classes=["code-input"]
                 )
                 
-                # Execute Button for Manual Commands
-                with gr.Row():
-                    manual_execute_btn = gr.Button(
-                        "Execute",
-                        variant="primary",
-                        visible=False
-                    )
-                
-                # Output Display
-                output_display = gr.Textbox(
-                    label="Output",
-                    lines=12,
-                    visible=False,
-                    interactive=False,
-                    elem_classes=["monospace"],
-                    show_copy_button=True
-                )
-                
-                # Loading indicator
-                loading_indicator = gr.HTML(
-                    value='<div style="text-align: center; padding: 1rem; color: #6b7280;">Processing...</div>',
+                manual_execute_btn = gr.Button(
+                    "Execute Command",
+                    elem_classes=["btn", "btn-primary"],
                     visible=False
                 )
+            
+            # Output Section
+            with gr.Group(elem_classes=["form-group"]):
+                output_display = gr.Textbox(
+                    label="Output",
+                    lines=15,
+                    visible=False,
+                    interactive=False,
+                    elem_classes=["code-output"],
+                    show_copy_button=True
+                )
+            
+            # Loading indicator
+            loading_indicator = gr.HTML(
+                value='<div class="status-message">Processing...</div>',
+                visible=False
+            )
 
 
         
         # Footer
         gr.HTML("""
-        <div style='text-align: center; color: #9ca3af; font-size: 0.75rem; margin-top: 1.5rem; padding: 0.5rem;'>
+        <div class="footer">
             Commands are filtered for safety
         </div>
         """)
