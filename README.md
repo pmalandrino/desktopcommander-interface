@@ -42,7 +42,7 @@ ollama serve
 
 Run the application:
 ```bash
-python app_ux.py
+python app.py
 ```
 
 The interface will open in your default browser at `http://localhost:7860`
