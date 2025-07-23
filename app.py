@@ -47,6 +47,7 @@ class Config:
 class AppState:
     command_history: List[CommandEntry] = field(default_factory=list)
     config: Config = field(default_factory=Config.from_env)
+    dry_run_mode: bool = False
 
 app_state = AppState()
 
@@ -113,6 +114,23 @@ def is_command_safe(command: str) -> bool:
 def execute_command(command: str) -> Tuple[str, CommandStatus]:
     if not is_command_safe(command):
         return "Command blocked for safety", CommandStatus.WARNING
+    
+    # Check for dry-run mode
+    if app_state.dry_run_mode:
+        dry_run_output = f"""[DRY RUN MODE - Command NOT executed]
+
+Command that would be executed:
+$ {command}
+
+Working directory: {Path.cwd()}
+User permissions: {os.getlogin() if hasattr(os, 'getlogin') else 'current user'}
+Shell: {os.environ.get('SHELL', 'default')}
+
+Safety check: {'PASSED' if is_command_safe(command) else 'FAILED'}
+Estimated risk: {'LOW' if not any(term in command.lower() for term in ['rm', 'delete', 'sudo', 'chmod', 'chown']) else 'HIGH'}
+
+To actually execute this command, disable dry-run mode."""
+        return dry_run_output, CommandStatus.SUCCESS
     
     try:
         result = subprocess.run(
@@ -205,16 +223,41 @@ def clear_interface():
 
 def refresh_status():
     status_text, _ = check_ollama()
-    return gr.update(value=f"{status_text}\nReady ({sys.platform})")
+    dry_run_status = "DRY RUN MODE ACTIVE" if app_state.dry_run_mode else "Live execution mode"
+    return gr.update(value=f"{status_text}\nReady ({sys.platform})\n{dry_run_status}")
+
+def toggle_dry_run(is_enabled: bool):
+    app_state.dry_run_mode = is_enabled
+    return refresh_status()
 
 def create_ui():
     with gr.Blocks(title="Desktop Commander") as app:
         gr.Markdown("# Desktop Commander")
         gr.Markdown("AI-powered command line interface")
         
+        # Security disclaimer
+        gr.Markdown("""
+        <div style="background-color: #fee; border: 2px solid #c00; border-radius: 5px; padding: 10px; margin: 10px 0;">
+            <h3 style="color: #c00; margin: 0;">⚠️ SECURITY WARNING</h3>
+            <p style="margin: 5px 0;"><strong>This application executes system commands with your user permissions.</strong></p>
+            <ul style="margin: 5px 0;">
+                <li>Commands run WITHOUT sandboxing - they can modify or delete files</li>
+                <li>Always review commands before execution</li>
+                <li>AI suggestions may be incorrect or unsafe</li>
+                <li>For development use only - NOT for production</li>
+            </ul>
+        </div>
+        """)
+        
         with gr.Row():
-            with gr.Column(scale=4):
+            with gr.Column(scale=3):
                 system_status = gr.Markdown(value="Loading...")
+            with gr.Column(scale=1):
+                dry_run_toggle = gr.Checkbox(
+                    label="Dry Run Mode",
+                    value=app_state.dry_run_mode,
+                    info="Preview commands without executing"
+                )
             with gr.Column(scale=1):
                 refresh_btn = gr.Button("🔄 Refresh", size="sm")
         
@@ -288,14 +331,28 @@ def create_ui():
         )
         
         refresh_btn.click(fn=refresh_status, outputs=system_status)
+        dry_run_toggle.change(fn=toggle_dry_run, inputs=dry_run_toggle, outputs=system_status)
         app.load(refresh_status, outputs=system_status)
     
     return app
 
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Desktop Commander - AI-powered command line interface")
+    parser.add_argument("--dry-run", action="store_true", help="Enable dry-run mode (commands are not executed)")
+    parser.add_argument("--port", type=int, default=7860, help="Port to run the server on (default: 7860)")
+    parser.add_argument("--no-browser", action="store_true", help="Don't open browser automatically")
+    args = parser.parse_args()
+    
+    # Set dry-run mode from command line
+    app_state.dry_run_mode = args.dry_run
+    
     print("Desktop Commander")
     print(f"Working Directory: {os.getcwd()}")
     print(f"Ollama Model: {app_state.config.ollama_model}")
+    if args.dry_run:
+        print("🔒 DRY RUN MODE ENABLED - Commands will NOT be executed")
     
     status_text, status_type = check_ollama()
     print(status_text)
@@ -305,12 +362,12 @@ if __name__ == "__main__":
         if response.lower() != 'y':
             sys.exit(0)
     
-    print("Launching at http://127.0.0.1:7860")
+    print(f"Launching at http://127.0.0.1:{args.port}")
     app = create_ui()
     app.launch(
         server_name="127.0.0.1",
-        server_port=7860,
+        server_port=args.port,
         share=False,
-        inbrowser=True,
+        inbrowser=not args.no_browser,
         show_error=True
     )
