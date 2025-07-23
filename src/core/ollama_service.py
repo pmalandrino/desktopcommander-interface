@@ -8,6 +8,21 @@ import requests
 from core.models import CommandStatus
 
 
+def get_available_models() -> Tuple[list, CommandStatus]:
+    """Get list of available Ollama models."""
+    try:
+        resp = requests.get("http://localhost:11434/api/tags", timeout=5)
+        if resp.status_code == 200:
+            models = resp.json().get("models", [])
+            model_names = [m.get("name", "") for m in models if m.get("name")]
+            if model_names:
+                return model_names, CommandStatus.SUCCESS
+            return [], CommandStatus.WARNING
+        return [], CommandStatus.ERROR
+    except requests.RequestException:
+        return [], CommandStatus.ERROR
+
+
 def check_ollama(ollama_model: str) -> Tuple[str, CommandStatus]:
     """Check if Ollama is available and the model is installed."""
     try:

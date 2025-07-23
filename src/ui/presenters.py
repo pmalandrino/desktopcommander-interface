@@ -7,8 +7,9 @@ import gradio as gr
 
 from core.models import AppState, CommandStatus
 from core.command_service import execute_command
-from core.ollama_service import generate_command, check_ollama
+from core.ollama_service import generate_command, check_ollama, get_available_models
 from core.history import add_to_history
+from core.config_manager import save_config, load_config, reset_config
 
 
 class CommandPresenter:
@@ -123,3 +124,83 @@ class CommandPresenter:
         """Toggle safe mode and return updated status."""
         self.app_state.safe_mode = is_enabled
         return self.refresh_status()
+    
+    def get_available_models(self) -> Tuple[Any, Any]:
+        """Get available Ollama models and return dropdown updates."""
+        models, status = get_available_models()
+        
+        if status == CommandStatus.SUCCESS and models:
+            # Return dropdown with models and current selection
+            return (
+                gr.update(choices=models, value=self.app_state.config.ollama_model),
+                gr.update(value=f"Found {len(models)} models", visible=True)
+            )
+        elif status == CommandStatus.WARNING:
+            return (
+                gr.update(choices=[], value=None),
+                gr.update(value="No models found. Run 'ollama pull <model>' to install models.", visible=True)
+            )
+        else:
+            return (
+                gr.update(choices=[], value=None),
+                gr.update(value="Cannot connect to Ollama. Ensure it's running.", visible=True)
+            )
+    
+    def update_model(self, selected_model: str) -> Any:
+        """Update the selected Ollama model."""
+        if selected_model:
+            self.app_state.config.ollama_model = selected_model
+            return self.refresh_status()
+        return gr.update()
+    
+    def update_timeout(self, timeout_value: int) -> Any:
+        """Update the command timeout setting."""
+        if 5 <= timeout_value <= 300:  # Reasonable bounds
+            self.app_state.config.command_timeout = timeout_value
+            return gr.update(value=f"Timeout updated to {timeout_value}s")
+        return gr.update(value="Timeout must be between 5 and 300 seconds")
+    
+    def update_ollama_url(self, url: str) -> Any:
+        """Update the Ollama URL setting."""
+        if url and url.startswith(('http://', 'https://')):
+            self.app_state.config.ollama_url = url
+            return gr.update(value="URL updated successfully")
+        return gr.update(value="Invalid URL format")
+    
+    def save_configuration(self) -> Any:
+        """Save current configuration to file."""
+        message, status = save_config(self.app_state.config)
+        if status == CommandStatus.SUCCESS:
+            return gr.update(value=f"✅ {message}", visible=True)
+        else:
+            return gr.update(value=f"❌ {message}", visible=True)
+    
+    def reset_configuration(self) -> Tuple[Any, ...]:
+        """Reset configuration to defaults."""
+        config, status = reset_config()
+        self.app_state.config = config
+        
+        # Return updates for all config components
+        return (
+            gr.update(value=config.ollama_model),  # model_dropdown
+            gr.update(value=config.ollama_url),    # ollama_url_input  
+            gr.update(value=config.command_timeout), # timeout_slider
+            self.refresh_status(),                  # system_status
+            gr.update(value="✅ Configuration reset to defaults", visible=True)  # status message
+        )
+    
+    def load_saved_configuration(self) -> Tuple[Any, ...]:
+        """Load configuration from file."""
+        config, status = load_config()
+        self.app_state.config = config
+        
+        message = "Configuration loaded from file" if status == CommandStatus.SUCCESS else "Using default configuration"
+        
+        # Return updates for all config components
+        return (
+            gr.update(value=config.ollama_model),   # model_dropdown
+            gr.update(value=config.ollama_url),     # ollama_url_input
+            gr.update(value=config.command_timeout), # timeout_slider
+            self.refresh_status(),                   # system_status
+            gr.update(value=f"✅ {message}", visible=True)  # status message
+        )

@@ -86,6 +86,49 @@ def create_ui(app_state: AppState) -> gr.Blocks:
 
         gr.Markdown("Commands are filtered for safety")
         
+        # Configuration Panel
+        with gr.Accordion("⚙️ Configuration", open=False):
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("### Ollama Settings")
+                    
+                    model_dropdown = gr.Dropdown(
+                        label="Ollama Model",
+                        choices=[],
+                        value=app_state.config.ollama_model,
+                        info="Select from available Ollama models"
+                    )
+                    
+                    refresh_models_btn = gr.Button("🔄 Refresh Models", size="sm")
+                    model_status = gr.Markdown("", visible=False)
+                    
+                    ollama_url_input = gr.Textbox(
+                        label="Ollama URL",
+                        value=app_state.config.ollama_url,
+                        info="Ollama server URL"
+                    )
+                    
+                with gr.Column():
+                    gr.Markdown("### Command Settings")
+                    
+                    timeout_slider = gr.Slider(
+                        minimum=5,
+                        maximum=300,
+                        value=app_state.config.command_timeout,
+                        step=5,
+                        label="Command Timeout (seconds)",
+                        info="Maximum time to wait for command execution"
+                    )
+                    
+                    timeout_status = gr.Markdown("", visible=False)
+                    url_status = gr.Markdown("", visible=False)
+                    
+                    with gr.Row():
+                        save_config_btn = gr.Button("💾 Save Configuration", variant="secondary")
+                        reset_config_btn = gr.Button("🔄 Reset to Defaults", variant="stop")
+                    
+                    config_status = gr.Markdown("", visible=False)
+        
         # Event handlers
         command_display.change(
             fn=lambda cmd: gr.update(visible=bool(cmd.strip())),
@@ -119,6 +162,44 @@ def create_ui(app_state: AppState) -> gr.Blocks:
         refresh_btn.click(fn=presenter.refresh_status, outputs=system_status)
         dry_run_toggle.change(fn=presenter.toggle_dry_run, inputs=dry_run_toggle, outputs=system_status)
         safe_mode_toggle.change(fn=presenter.toggle_safe_mode, inputs=safe_mode_toggle, outputs=system_status)
+        
+        # Configuration event handlers
+        refresh_models_btn.click(
+            fn=presenter.get_available_models,
+            outputs=[model_dropdown, model_status]
+        )
+        
+        model_dropdown.change(
+            fn=presenter.update_model,
+            inputs=model_dropdown,
+            outputs=system_status
+        )
+        
+        timeout_slider.change(
+            fn=presenter.update_timeout,
+            inputs=timeout_slider,
+            outputs=timeout_status
+        )
+        
+        ollama_url_input.change(
+            fn=presenter.update_ollama_url,
+            inputs=ollama_url_input,
+            outputs=url_status
+        )
+        
+        save_config_btn.click(
+            fn=presenter.save_configuration,
+            outputs=config_status
+        )
+        
+        reset_config_btn.click(
+            fn=presenter.reset_configuration,
+            outputs=[model_dropdown, ollama_url_input, timeout_slider, system_status, config_status]
+        )
+        
+        # Load initial data
         app.load(presenter.refresh_status, outputs=system_status)
+        app.load(presenter.get_available_models, outputs=[model_dropdown, model_status])
+        app.load(presenter.load_saved_configuration, outputs=[model_dropdown, ollama_url_input, timeout_slider, system_status, config_status])
     
     return app

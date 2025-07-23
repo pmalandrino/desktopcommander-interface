@@ -92,6 +92,16 @@ The interface will open in your default browser at `http://localhost:7860`
 2. **Safe Mode**: Only allows whitelisted read-only commands (ls, cat, ps, etc.)
 3. **Combined**: Use both modes together for maximum safety during exploration
 
+### Configuration Management
+
+Desktop Commander now includes a comprehensive configuration panel accessible through the UI:
+
+1. **Model Selection**: Choose from available Ollama models with live refresh
+2. **Timeout Settings**: Adjust command execution timeout (5-300 seconds)
+3. **Ollama URL**: Configure custom Ollama server endpoints
+4. **Persistence**: Settings are automatically saved to `~/.desktopcommander_config.json`
+5. **Reset Option**: Restore default settings at any time
+
 ## Interface Overview
 
 ### Main Components:
@@ -114,6 +124,12 @@ The interface will open in your default browser at `http://localhost:7860`
    - Chronological list of executed commands
    - Timestamps and execution status
    - Click to re-run previous commands
+
+5. **Configuration Panel**
+   - Ollama model selection with live model list
+   - Command timeout adjustment
+   - Server URL configuration
+   - Settings persistence and reset options
 
 ## Command Categories
 
@@ -223,7 +239,8 @@ desktopcommander-interface/
 │   │   ├── command_service.py # Command execution
 │   │   ├── ollama_service.py  # AI integration
 │   │   ├── security.py       # Safety checks
-│   │   └── history.py        # Command history
+│   │   ├── history.py        # Command history
+│   │   └── config_manager.py # Configuration persistence
 │   ├── ui/                   # User interface
 │   │   ├── gradio_app.py     # Gradio UI creation
 │   │   └── presenters.py     # UI logic

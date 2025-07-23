@@ -6,6 +6,7 @@ import sys
 
 from core.models import AppState, CommandStatus
 from core.ollama_service import check_ollama
+from core.config_manager import load_config
 from ui.gradio_app import create_ui
 
 
@@ -20,6 +21,12 @@ def main():
     
     # Initialize app state
     app_state = AppState()
+    
+    # Load saved configuration (fallback to env/defaults)
+    config, config_status = load_config()
+    app_state.config = config
+    
+    # Override with command line arguments
     app_state.dry_run_mode = args.dry_run
     app_state.safe_mode = args.safe_mode
     
